@@ -149,8 +149,8 @@ int main(int argc, char **argv)
   
   //just an export of the reconstructed image
   trace.beginBlock("Exporting...");
-  VolWriter<Image  >::exportVol("original.vol", inputVol);
-  VolWriter<Image  >::exportVol("convolution.vol", imagereconstructed);
+  VolWriter<Image>::exportVol("original.vol", inputVol);
+  VolWriter<Image>::exportVol("convolution.vol", imagereconstructed);
   trace.endBlock();
   
 }
