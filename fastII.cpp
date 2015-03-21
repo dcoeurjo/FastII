@@ -64,9 +64,7 @@ int main(int argc, char **argv)
   po::notify ( vm );
   if ( !parseOK || vm.count ( "help" ) ||argc<=1 )
   {
-    trace.info() << "Create space-time vol"<<std::endl
-    << std::endl << "Basic usage: "<<std::endl
-    << "\tcreateVol  --o <volOutputFileName>  ...;TODO....."<<std::endl
+    trace.info() << "Fast integral invariant convolution using FFT"<<std::endl
     << general_opt << "\n";
     return 0;
   }
@@ -80,34 +78,48 @@ int main(int argc, char **argv)
   typedef ImageContainerBySTLVector<Domain, unsigned char> Image;
 
   //Source vol
-  Image inputVol = VolReader<Image>::importVol(input);
+  trace.beginBlock("Loading Vol file and generating kernels");
+  Image vol = VolReader<Image>::importVol(input);
+  Domain domain=vol.domain();
+  Point mid = (domain.lowerBound()+domain.upperBound())/2;
+  //Shifting the domain
+  Image inputVol( Domain(domain.lowerBound() - mid,
+                         domain.upperBound() - mid));
+  for(auto it=inputVol.domain().begin(), itend= inputVol.domain().end();
+      it != itend; ++it)
+    inputVol.setValue(*it, vol(*it+mid));
+  domain = inputVol.domain();
   
-  Domain domain=inputVol.domain();
   
   //Kernel
-  Image kernel(inputVol);
+  Image kernel(inputVol.domain());
+  for(auto it=kernel.begin(); it != kernel.end(); ++it)
+    *it = 0;
+  
   typedef ImplicitBall<Z3i::Space> Shape3D;
-  Shape3D aShape( Point(64,64,64), radius);
+  Shape3D aShape( Point(0,0,0), radius);
   typedef GaussDigitizer<Z3i::Space,Shape3D> Gauss;
   Gauss dig;
   dig.attach( aShape );
   dig.init( aShape.getLowerBound()+Z3i::Vector(-1,-1,-1),
            aShape.getUpperBound()+Z3i::Vector(1,1,1), 1.0 );
-  Z3i::Domain d3D = dig.getDomain();
-  for(Z3i::Domain::ConstIterator it = d3D.begin() ; it != d3D.end();
+
+  for(Z3i::Domain::ConstIterator it = dig.getDomain().begin() ; it != dig.getDomain().end();
       ++it)
   {
     Z3i::Point P = *it;
     if (dig(P))
-      kernel.setValue( P , 128 );
+      kernel.setValue( P , 1 );
   }
-  
+  trace.info()<<"Input: "<<inputVol<<std::endl;
+  trace.info()<<"Kernel: "<<kernel<<std::endl;
+  trace.endBlock();
   
   //FFT
   typedef FFT< Image > FFT3D;
   FFT3D fftV(inputVol);
   FFT3D fftK(kernel);
-  trace.beginBlock("Computing the two FFT");
+  trace.beginBlock("Computing the two FFTs");
   FFT3D::ComplexImage fftVol(domain);
   FFT3D::ComplexImage fftKernel(domain);
   fftV.compute(fftVol);
@@ -115,9 +127,10 @@ int main(int argc, char **argv)
   trace.endBlock();
   
   //Product
+  trace.beginBlock("Product in Fourier Space");
   for(auto it=fftVol.begin(), itK=fftKernel.begin() , itend = fftVol.end(); it != itend ; ++it, ++itK)
     (*it) *= (*itK);
-  
+  trace.endBlock();
   
   //iFFT
   typedef IFFT<FFT3D::ComplexImage> IFFT3D;
@@ -127,12 +140,16 @@ int main(int argc, char **argv)
   ifft.compute(imagereconstructed);
   trace.endBlock();
   
-  //just an export of the reconstructed image
-  VolWriter<Image  >::exportVol("original.vol", inputVol);
-  VolWriter<Image  >::exportVol("inverse.vol", imagereconstructed);
+  /*for(auto it = imagereconstructed.begin(), itend=imagereconstructed.end();
+      it != itend;
+      ++it)
+    trace.info()<<" "<<(int)*it;
+  */
   
-
-  trace.info()<< "Export done."<<std::endl;
-
+  //just an export of the reconstructed image
+  trace.beginBlock("Exporting...");
+  VolWriter<Image  >::exportVol("original.vol", inputVol);
+  VolWriter<Image  >::exportVol("convolution.vol", imagereconstructed);
+  trace.endBlock();
   
 }
