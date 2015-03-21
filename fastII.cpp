@@ -138,6 +138,7 @@ int main(int argc, char **argv)
   IFFT3D ifft(fftVol);
   trace.beginBlock("Computing IFFT");
   ifft.compute(imagereconstructed);
+  trace.info()<<"Convolution: "<<imagereconstructed<<std::endl;
   trace.endBlock();
   
   /*for(auto it = imagereconstructed.begin(), itend=imagereconstructed.end();
