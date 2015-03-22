@@ -38,6 +38,17 @@ void missingParam ( std::string param )
 }
 
 
+struct ReMap
+{
+  ReMap(const double min, const double max): mymin(min),mymax(max)
+  {}
+  unsigned char operator()(const double val) const
+  {
+    return static_cast<unsigned char>((val-mymin)/(mymax-mymin)*255.0);
+  }
+  double mymin,mymax;
+};
+
 /**
  * Testing DGtal/FFTW API
  *
@@ -75,7 +86,7 @@ int main(int argc, char **argv)
   const double  radius = vm["radius"].as<double>();
   
   
-  typedef ImageContainerBySTLVector<Domain, unsigned char> Image;
+  typedef ImageContainerBySTLVector<Domain, double> Image;
 
   //Source vol
   trace.beginBlock("Loading Vol file and generating kernels");
@@ -94,7 +105,7 @@ int main(int argc, char **argv)
   //Kernel
   Image kernel(inputVol.domain());
   for(auto it=kernel.begin(); it != kernel.end(); ++it)
-    *it = 0;
+    *it = 0.0;
   
   typedef ImplicitBall<Z3i::Space> Shape3D;
   Shape3D aShape( Point(0,0,0), radius);
@@ -104,12 +115,14 @@ int main(int argc, char **argv)
   dig.init( aShape.getLowerBound()+Z3i::Vector(-1,-1,-1),
            aShape.getUpperBound()+Z3i::Vector(1,1,1), 1.0 );
 
+
+  double volume = 4.0/3.0*M_PI*radius*radius*radius;
   for(Z3i::Domain::ConstIterator it = dig.getDomain().begin() ; it != dig.getDomain().end();
       ++it)
   {
     Z3i::Point P = *it;
     if (dig(P))
-      kernel.setValue( P , 1 );
+      kernel.setValue( P , 1.0 );
   }
   trace.info()<<"Input: "<<inputVol<<std::endl;
   trace.info()<<"Kernel: "<<kernel<<std::endl;
@@ -141,16 +154,13 @@ int main(int argc, char **argv)
   trace.info()<<"Convolution: "<<imagereconstructed<<std::endl;
   trace.endBlock();
   
-  /*for(auto it = imagereconstructed.begin(), itend=imagereconstructed.end();
-      it != itend;
-      ++it)
-    trace.info()<<" "<<(int)*it;
-  */
+  double max= * std::max_element(imagereconstructed.begin(), imagereconstructed.end());
+  double min= * std::min_element(imagereconstructed.begin(), imagereconstructed.end());
+  trace.info()<< "max= "<< max<<" min= "<<min<<std::endl;
   
   //just an export of the reconstructed image
   trace.beginBlock("Exporting...");
-  VolWriter<Image>::exportVol("original.vol", inputVol);
-  VolWriter<Image>::exportVol("convolution.vol", imagereconstructed);
+  VolWriter<Image,ReMap>::exportVol("convolution.vol", imagereconstructed, ReMap(min,max));
   trace.endBlock();
   
 }
