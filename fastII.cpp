@@ -8,15 +8,11 @@
 #include <DGtal/io/writers/VolWriter.h>
 #include <DGtal/io/readers/VolReader.h>
 
-
 #include <boost/program_options/options_description.hpp>
 #include <boost/program_options/parsers.hpp>
 #include <boost/program_options/variables_map.hpp>
 
-
-
 namespace po = boost::program_options;
-
 
 using namespace DGtal;
 using namespace Z3i;
@@ -37,7 +33,9 @@ void missingParam ( std::string param )
   exit ( 1 );
 }
 
-
+/**
+ * Linear remapping double (min,max)-> [0,255]
+ */
 struct ReMap
 {
   ReMap(const double min, const double max): mymin(min),mymax(max)
@@ -106,7 +104,6 @@ int main(int argc, char **argv)
   Image kernel(inputVol.domain());
   for(auto it=kernel.begin(); it != kernel.end(); ++it)
     *it = 0.0;
-  
   typedef ImplicitBall<Z3i::Space> Shape3D;
   Shape3D aShape( Point(0,0,0), radius);
   typedef GaussDigitizer<Z3i::Space,Shape3D> Gauss;
@@ -116,7 +113,7 @@ int main(int argc, char **argv)
            aShape.getUpperBound()+Z3i::Vector(1,1,1), 1.0 );
 
 
-  double volume = 4.0/3.0*M_PI*radius*radius*radius;
+  //double volume = 4.0/3.0*M_PI*radius*radius*radius;
   for(Z3i::Domain::ConstIterator it = dig.getDomain().begin() ; it != dig.getDomain().end();
       ++it)
   {
@@ -154,11 +151,10 @@ int main(int argc, char **argv)
   trace.info()<<"Convolution: "<<imagereconstructed<<std::endl;
   trace.endBlock();
   
+  //just an export of the reconstructed image
   double max= * std::max_element(imagereconstructed.begin(), imagereconstructed.end());
   double min= * std::min_element(imagereconstructed.begin(), imagereconstructed.end());
   trace.info()<< "max= "<< max<<" min= "<<min<<std::endl;
-  
-  //just an export of the reconstructed image
   trace.beginBlock("Exporting...");
   VolWriter<Image,ReMap>::exportVol("convolution.vol", imagereconstructed, ReMap(min,max));
   trace.endBlock();
