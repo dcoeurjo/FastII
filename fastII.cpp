@@ -151,12 +151,27 @@ int main(int argc, char **argv)
   trace.info()<<"Convolution: "<<imagereconstructed<<std::endl;
   trace.endBlock();
   
-  //just an export of the reconstructed image
+  //just an export of the  images
   double max= * std::max_element(imagereconstructed.begin(), imagereconstructed.end());
   double min= * std::min_element(imagereconstructed.begin(), imagereconstructed.end());
   trace.info()<< "max= "<< max<<" min= "<<min<<std::endl;
   trace.beginBlock("Exporting...");
   VolWriter<Image,ReMap>::exportVol("convolution.vol", imagereconstructed, ReMap(min,max));
+  trace.endBlock();
+  
+  //iFFT of the kernel, just to make sure
+  typedef IFFT<FFT3D::ComplexImage> IFFT3D;
+  Image imagereconstructedK(domain);
+  IFFT3D ifftK(fftKernel);
+  trace.beginBlock("Computing IFFT");
+  ifftK.compute(imagereconstructedK);
+  trace.info()<<"Kernel: "<<imagereconstructedK<<std::endl;
+  trace.endBlock();
+  max= * std::max_element(imagereconstructedK.begin(), imagereconstructedK.end());
+  min= * std::min_element(imagereconstructedK.begin(), imagereconstructedK.end());
+  trace.info()<< "max= "<< max<<" min= "<<min<<std::endl;
+  trace.beginBlock("Exporting...");
+  VolWriter<Image,ReMap>::exportVol("kernel.vol", imagereconstructedK, ReMap(min,max));
   trace.endBlock();
   
 }
