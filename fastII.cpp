@@ -96,7 +96,8 @@ int main(int argc, char **argv)
                          domain.upperBound() - mid));
   for(auto it=inputVol.domain().begin(), itend= inputVol.domain().end();
       it != itend; ++it)
-    inputVol.setValue(*it, vol(*it+mid));
+    if (vol(*it+mid) > 0)
+      inputVol.setValue(*it, 1);
   domain = inputVol.domain();
   
   
@@ -139,7 +140,7 @@ int main(int argc, char **argv)
   //Product
   trace.beginBlock("Product in Fourier Space");
   for(auto it=fftVol.begin(), itK=fftKernel.begin() , itend = fftVol.end(); it != itend ; ++it, ++itK)
-    (*it) *= =((*itK));
+    (*it) *= ((*itK));
   trace.endBlock();
   
   //iFFT
