@@ -97,7 +97,7 @@ int main(int argc, char **argv)
   for(auto it=inputVol.domain().begin(), itend= inputVol.domain().end();
       it != itend; ++it)
     if (vol(*it+mid) > 0)
-      inputVol.setValue(*it, 1);
+      inputVol.setValue(*it, 1.0);
   domain = inputVol.domain();
   
   
