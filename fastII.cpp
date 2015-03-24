@@ -139,7 +139,7 @@ int main(int argc, char **argv)
   //Product
   trace.beginBlock("Product in Fourier Space");
   for(auto it=fftVol.begin(), itK=fftKernel.begin() , itend = fftVol.end(); it != itend ; ++it, ++itK)
-    (*it) *= (*itK);
+    (*it) *= =((*itK));
   trace.endBlock();
   
   //iFFT

@@ -16,7 +16,8 @@ namespace DGtal{
    * @tparam TImage, the type of image 
    */
   template <typename TImage>
-w  {
+  class FFT
+    {
 
     //ASSERT
     BOOST_CONCEPT_ASSERT(( concepts::CImage<TImage> ));
