@@ -41,7 +41,7 @@ ENDIF(VERBOSE)
 
 SET(DGTAL_TOOLS_SRC
   fastII
-  )
+  fastII-RealFFT)
 
 FOREACH(FILE ${DGTAL_TOOLS_SRC})
   add_executable(${FILE} ${FILE})
