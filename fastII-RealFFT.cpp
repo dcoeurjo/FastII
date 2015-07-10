@@ -125,7 +125,7 @@ int main(int argc, char **argv)
   trace.endBlock();
   
   //FFT
-  typedef FFT< Image > FFT3D;
+  typedef RealFFT< Image > FFT3D;
   FFT3D fftV(inputVol);
   FFT3D fftK(kernel);
   trace.beginBlock("Computing the two FFTs");
@@ -142,7 +142,7 @@ int main(int argc, char **argv)
   trace.endBlock();
   
   //iFFT
-  typedef IFFT<FFT3D::ComplexImage> IFFT3D;
+  typedef RealFFT<FFT3D::ComplexImage> IFFT3D;
   Image imagereconstructed(domain);
   IFFT3D ifft(fftVol);
   trace.beginBlock("Computing IFFT");
